@@ -46,7 +46,23 @@ body { display: flex; flex-direction: column; }
 .top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .4rem 1rem; margin-bottom: .65rem; }
 .title-grp { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
 .kicker { font-size: .7rem; letter-spacing: .18em; color: var(--accent); font-weight: 700; }
-.top h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.55rem; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+.top h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.85rem; line-height: 1.2; margin: 0; letter-spacing: -.01em; }
+.instagram-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.88rem; height: 2.88rem; flex: none; color: var(--fg);
+  border: 1px solid var(--line); border-radius: .45rem;
+  text-decoration: none; transition: color .15s, border-color .15s, background .15s;
+}
+.instagram-link:hover { color: #fff; border-color: var(--accent); background: var(--accent); }
+.instagram-link svg { width: 1.76rem; height: 1.76rem; display: block; }
+.instagram-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.shop-instagram-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.55em; height: 1.55em; margin-right: .18em; vertical-align: -.24em;
+  color: inherit; text-decoration: none; border-radius: .25em;
+}
+.shop-instagram-link svg { width: 1.3em; height: 1.3em; display: block; }
+.shop-instagram-link:hover { color: var(--accent); }
 .top p { margin: 0; color: var(--muted); font-size: .8125rem; width: 100%; margin-top: .15rem; }
 
 .top-btns { display: flex; gap: .5rem; align-items: center; }
@@ -183,6 +199,28 @@ body { display: flex; flex-direction: column; }
 }
 .qr-actions .primary { background: #9a5a22; color: #fff; border-color: #9a5a22; }
 
+@media (max-width: 767px) {
+  .top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: .45rem .5rem;
+  }
+  .title-grp {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  .top-btns {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .top p { grid-column: 1 / -1; text-align: center; }
+}
+
 @media (prefers-reduced-motion: reduce) { .h-scroll { scroll-behavior: auto; } }
 
 /* 실제 식물·과일 삽화 배경: 메뉴 데이터와 레이아웃/기능은 그대로 유지 */
@@ -256,11 +294,10 @@ body::before {
 <div class="top-area">
   <header class="top">
     <div class="title-grp">
-      <div class="kicker" id="kicker">네이버후드바 상선</div>
       <h1 id="shop"></h1>
     </div>
     <div class="top-btns">
-      <button type="button" class="lang-switch" id="lang-btn">🌐 EN</button>
+      <button type="button" class="lang-switch" id="lang-btn">🇺🇸 EN</button>
       <button type="button" class="qr-btn" id="open-qr" aria-label="QR코드 보기">🏁 QR</button>
     </div>
     <p id="intro"></p>
@@ -304,8 +341,8 @@ body::before {
 
 <!-- ============ 메뉴 데이터 (한국어 / 영어 듀얼 지원) ============ -->
 <script type="text/plain" id="menu-data">
-@가게이름_ko = @bar.sangsun
-@가게이름_en = @bar.sangsun
+@가게이름_ko = @bar.snagsun
+@가게이름_en = @bar.snagsun
 @안내문_ko = 궁금한 메뉴 있으시면 두 사장을 찾아주세요!!
 @안내문_en = Feel free to ask the owners if you have any questions!
 @하단문구_ko = 재고에 따라 일부 메뉴는 제공되지 않을 수 있습니다.
@@ -313,9 +350,9 @@ body::before {
 
 [스카치 하이랜드 | Scotch Highland | 30ml]
 글렌모렌지 12년 오리지날 | Glenmorangie The Original 12y | 40% | 12000
+글렌모렌지 14년 퀸타루반 | Glenmorangie Quinta Ruban | 46% | 15000
 글렌모렌지 15년 라산타 | Glenmorangie Lasanta 15y | 43% | 15000
-글렌모렌지 퀸타루반 | Glenmorangie Quinta Ruban | 46% | 15000
-글렌모렌지 넥타도르 | Glenmorangie Nectar D'Or | 46% | 17000
+글렌모렌지 16년 넥타도르 | Glenmorangie Nectar D'Or | 46% | 17000
 글렌모렌지 시그넷 | Glenmorangie Signet | 46% | 30000
 더 글렌드로낙 12년 | The Glendronach 12y | 43% | 12000
 더 글렌드로낙 15년 | The Glendronach 15y | 46% | 20000
@@ -544,16 +581,20 @@ S.B.S 도미니칸 아로마 그란데 | S.B.S Dominican Aroma Grande | 57% | 10
     var secs = [], itemEls = [];
 
     // 설정 반영
-    var shopText = settings[currentLang]['가게이름'] || '@bar.sangsun';
-    document.getElementById('shop').textContent = shopText;
+    var shopText = settings[currentLang]['가게이름'] || '@bar.snagsun';
+    var shopEl = document.getElementById('shop');
     document.getElementById('qr-title').textContent = shopText;
     document.title = shopText;
+    if (shopText.charAt(0) === '@') {
+      shopEl.innerHTML = '<a class="shop-instagram-link" href="https://www.instagram.com/bar.snagsun/" target="_blank" rel="noopener noreferrer" aria-label="Instagram 열기" title="Instagram"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.7" r="1.1" fill="currentColor"/></svg></a>' + shopText.slice(1);
+    } else {
+      shopEl.textContent = shopText;
+    }
     document.getElementById('intro').textContent = settings[currentLang]['안내문'] || '';
     document.getElementById('foot').textContent = settings[currentLang]['하단문구'] || '';
-    document.getElementById('kicker').textContent = currentLang === 'ko' ? '네이버후드바 상선' : 'Neighborhood Bar Sangsun';
     document.getElementById('q').placeholder = currentLang === 'ko' ? '술 이름 · 국가 · 도수 검색 (예: 글렌피딕, 일본, 50%)' : 'Search by name, country, ABV...';
     document.getElementById('swipe-hint').textContent = currentLang === 'ko' ? '← 좌우로 밀어서 카테고리 이동 →' : '← Swipe left/right to move categories →';
-    document.getElementById('lang-btn').textContent = currentLang === 'ko' ? '🌐 EN' : '🌐 KO';
+    document.getElementById('lang-btn').textContent = currentLang === 'ko' ? '🇺🇸 EN' : '🇰🇷 한국어';
 
     groups.forEach(function (g, i) {
       var id = 'g' + i;
@@ -681,3 +722,4 @@ S.B.S 도미니칸 아로마 그란데 | S.B.S Dominican Aroma Grande | 57% | 10
 </script>
 </body>
 </html>
+
