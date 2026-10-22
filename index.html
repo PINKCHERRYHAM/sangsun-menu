@@ -301,9 +301,186 @@ E.H 테일러 스몰배치 | 50% | 25000
 기원 호랑이 | 46% | 13000 | 한국
 니카 프롬 더 배럴 | 51.4% | 12000 | 일본
 람푸르 아사바 | 45% | 15000 | 인도
-미야기쿄 싱글몰트 | 45% | 일본
-요이치 싱글몰트 | 45% | 일본
-아마하간 월드몰트 에디션 No.3 미즈나라 캐스크 | 47% | 일본
-아마하간 월드몰트 야마자쿠라 캐스크 | 47% | 일본
-라크 클래식 캐스크 | 43% | 호주
-라크 치노토 캐스크 | 44% | 호주
+미야기쿄 싱글몰트 | 45% | 15000 | 일본
+요이치 싱글몰트 | 45% | 15000 | 일본
+아마하간 월드몰트 에디션 No.3 미즈나라 캐스크 | 47% | 18000 | 일본
+아마하간 월드몰트 야마자쿠라 캐스크 | 47% | 18000 | 일본
+라크 클래식 캐스크 | 43% | 25000 | 호주
+라크 치노토 캐스크 | 44% | 25000 | 호주
+</script>
+<!-- ============ 메뉴 데이터 끝 ============ -->
+
+<script>
+(function () {
+  var raw = document.getElementById('menu-data').textContent;
+  var settings = {}, groups = [], cur = null;
+
+  raw.split(/\r?\n/).forEach(function (line) {
+    line = line.trim();
+    if (!line || line.indexOf('//') === 0) return;
+    var s = line.match(/^@([^=]+)=(.*)$/);
+    if (s) { settings[s[1].trim()] = s[2].trim(); return; }
+    var g = line.match(/^\[(.+)\]$/);
+    if (g) {
+      var p = g[1].split('|');
+      cur = { label: p[0].trim(), unit: (p[1] || '').trim(), items: [] };
+      groups.push(cur);
+      return;
+    }
+    if (!cur) return;
+    var f = line.split('|').map(function (x) { return x.trim(); });
+    if (!f[0]) return;
+
+    if (f.length >= 2 && /%/.test(f[1])) {
+      var third = f[2] || '';
+      var fourth = f[3] || '';
+      // 세 번째 칸에 숫자가 없고(품절/문의 제외) 네 번째 칸이 비어있다면 태그로 자동 인식
+      if (third && !/^[\d,\s]+$/.test(third) && third !== '품절' && third !== '문의' && !fourth) {
+        cur.items.push({ name: f[0], abv: f[1], price: '', tag: third });
+      } else {
+        cur.items.push({ name: f[0], abv: f[1], price: third, tag: fourth });
+      }
+    } else {
+      cur.items.push({ name: f[0], abv: '', price: f[1] || '', tag: f[2] || '' });
+    }
+  });
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function fmt(v) {
+    return (v && /^[\d,\s]+$/.test(v)) ? Number(v.replace(/[^\d]/g, '')).toLocaleString('ko-KR') : null;
+  }
+
+  var shop = settings['가게이름'] || '메뉴판';
+  document.getElementById('shop').textContent = shop;
+  document.getElementById('qr-title').textContent = shop;
+  document.title = shop;
+  document.getElementById('intro').textContent = settings['안내문'] || '';
+  document.getElementById('foot').textContent = settings['하단문구'] || '';
+
+  var menu = document.getElementById('menu');
+  var chips = document.getElementById('chips');
+  var secs = [], itemEls = [];
+
+  groups.forEach(function (g, i) {
+    var id = 'g' + i;
+    var sec = el('section', 'grp'); sec.id = id;
+    var h = el('header', 'grp-h');
+    h.appendChild(el('h2', '', g.label));
+    var u = el('span', 'unit', (g.unit ? g.unit + ' · ' : ''));
+    var cnt = el('span', 'cnt', String(g.items.length));
+    u.appendChild(cnt); u.appendChild(document.createTextNode('종'));
+    h.appendChild(u); sec.appendChild(h);
+    var ul = el('ul', 'list');
+
+    g.items.forEach(function (it) {
+      var li = el('li', 'item');
+      var searchKey = (it.name + ' ' + it.tag + ' ' + it.abv).toLowerCase().replace(/\s+/g, '');
+      li.setAttribute('data-name', searchKey);
+
+      var nm = el('span', 'nm', it.name);
+      if (it.tag) nm.appendChild(el('span', 'tag', it.tag));
+      li.appendChild(nm);
+
+      var d = el('span', 'dots'); d.setAttribute('aria-hidden', 'true');
+      li.appendChild(d);
+
+      if (it.abv) {
+        li.appendChild(el('span', 'abv', it.abv));
+      }
+
+      if (it.price) {
+        var n = fmt(it.price);
+        li.appendChild(el('span', n ? 'pr' : 'pr text', n || it.price));
+      }
+      ul.appendChild(li); itemEls.push(li);
+    });
+
+    sec.appendChild(ul); menu.appendChild(sec);
+    secs.push({ el: sec, cnt: cnt });
+
+    var a = el('a', 'chip' + (i === 0 ? ' on' : ''), g.label);
+    a.href = '#' + id; a.setAttribute('data-target', id);
+    a.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      sec.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    });
+    chips.appendChild(a);
+  });
+
+  var q = document.getElementById('q'), empty = document.getElementById('empty');
+  q.addEventListener('input', function () {
+    var v = q.value.toLowerCase().replace(/\s+/g, ''), shown = 0;
+    itemEls.forEach(function (li) { li.hidden = !!v && li.getAttribute('data-name').indexOf(v) === -1; });
+    secs.forEach(function (s) {
+      var n = s.el.querySelectorAll('.item:not([hidden])').length;
+      s.el.hidden = n === 0; s.cnt.textContent = n; shown += n;
+    });
+    empty.hidden = shown !== 0;
+    menu.scrollLeft = 0;
+  });
+
+  if ('IntersectionObserver' in window) {
+    var chipEls = Array.prototype.slice.call(chips.children);
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        chipEls.forEach(function (c) { c.classList.toggle('on', c.getAttribute('data-target') === e.target.id); });
+        var on = chips.querySelector('.chip.on');
+        if (on) chips.scrollLeft = on.offsetLeft - chips.clientWidth / 2 + on.clientWidth / 2;
+      });
+    }, { root: menu, threshold: 0.55 });
+    secs.forEach(function (s) { io.observe(s.el); });
+  }
+
+  menu.addEventListener('wheel', function (e) {
+    var list = e.target.closest('.list');
+    if (list && list.scrollHeight > list.clientHeight) {
+      var atTop = list.scrollTop <= 0 && e.deltaY < 0;
+      var atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 1 && e.deltaY > 0;
+      if (!atTop && !atBottom) return;
+    }
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      menu.scrollBy({ left: e.deltaY * 1.5, behavior: 'auto' });
+    }
+  }, { passive: false });
+
+  // QR코드 생성 기능
+  var qrModal = document.getElementById('qr-modal');
+  var qrImg = document.getElementById('qr-img');
+  var qrUrlInput = document.getElementById('qr-url');
+  var qrDownload = document.getElementById('qr-download');
+
+  function updateQR(url) {
+    var target = url.trim() || window.location.href;
+    var api = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=' + encodeURIComponent(target);
+    qrImg.src = api;
+    qrDownload.href = api;
+  }
+
+  document.getElementById('open-qr').addEventListener('click', function () {
+    var currentUrl = window.location.href.indexOf('http') === 0 ? window.location.href.split('#')[0] : 'https://여기에-배포한-주소를-넣으세요.github.io';
+    qrUrlInput.value = currentUrl;
+    updateQR(currentUrl);
+    qrModal.hidden = false;
+  });
+
+  qrUrlInput.addEventListener('input', function () {
+    updateQR(qrUrlInput.value);
+  });
+
+  document.getElementById('close-qr').addEventListener('click', function () {
+    qrModal.hidden = true;
+  });
+  qrModal.addEventListener('click', function (e) {
+    if (e.target === qrModal) qrModal.hidden = true;
+  });
+})();
+</script>
+</body>
+</html>
