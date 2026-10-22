@@ -9,13 +9,30 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap">
 <style>
 :root {
-  --bg: #eef0ea; --surface: #f7f8f4; --fg: #16231f; --muted: #5d6b65; --line: #cfd6cc; --accent: #9a5a22;
+  --bg: #111c18;           /* 깊고 진한 진녹색 배경 */
+  --surface: #1b2d27;      /* 카드 및 컨테이너용 진한 그린톤 표면 */
+  --fg: #f3f0ea;           /* 텍스트용 따뜻한 아이보리 */
+  --muted: #9aa8a2;        /* 보조 텍스트용 차분한 회녹색 */
+  --line: #2d453d;         /* 구분선용 진녹색 계열 선 */
+  --accent: #802e3b;       /* 포인트용 고급스러운 와인색(버건디) */
+  --wood: #a66a3d;         /* 우드톤 보조 색상 */
   --font-display: "Noto Serif KR", "Nanum Myeongjo", "Apple SD Gothic Neo", serif;
   --font-body: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-  color-scheme: light;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #0f1816; --surface: #15211e; --fg: #e9ede6; --muted: #93a39b; --line: #2a3a36; --accent: #d9a05b; color-scheme: dark; }
+
+@media (prefers-color-scheme: light) {
+  /* 라이트 모드에서도 진녹색 컨셉을 유지하려면 아래처럼 고정하거나 라이트/다크를 반대로 설정할 수 있습니다 */
+  :root { 
+    --bg: #111c18; 
+    --surface: #1b2d27; 
+    --fg: #f3f0ea; 
+    --muted: #9aa8a2; 
+    --line: #2d453d; 
+    --accent: #802e3b; 
+    --wood: #a66a3d; 
+    color-scheme: dark; 
+  }
 }
 * { box-sizing: border-box; }
 html, body {
