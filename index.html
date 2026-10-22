@@ -73,13 +73,6 @@ body { display: flex; flex-direction: column; }
 }
 .lang-switch:hover { border-color: var(--accent); color: var(--accent); }
 
-.qr-btn {
-  background: rgba(13, 29, 23, .62); color: var(--fg); border: 1px solid var(--line);
-  border-radius: .45rem; padding: .35rem .65rem; font-size: .75rem; font-weight: 600;
-  cursor: pointer; display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
-}
-.qr-btn:hover { border-color: var(--accent); color: var(--accent); }
-
 .rail { flex: none; border-bottom: 1px solid var(--line); padding: 0 16px .65rem; }
 .rail-in { max-width: 68rem; margin: 0 auto; display: grid; gap: .5rem; }
 .search { width: 100%; font: inherit; font-size: 15px; color: var(--fg); background: rgba(8, 20, 15, .56); border: 1px solid var(--line); border-radius: .5rem; padding: .45rem .8rem; min-height: 2.4rem; }
@@ -171,33 +164,6 @@ body { display: flex; flex-direction: column; }
 .foot { max-width: 68rem; margin: 0 auto; font-size: .72rem; color: var(--muted); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .swipe-hint { color: var(--accent); font-weight: 500; }
 
-/* QR 모달 팝업 스타일 */
-.qr-modal {
-  position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.65);
-  display: flex; align-items: center; justify-content: center; padding: 16px;
-}
-.qr-modal[hidden] { display: none; }
-.qr-box {
-  background: #ffffff; color: #16231f; border-radius: 1rem; padding: 1.5rem;
-  max-width: 22rem; width: 100%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-.qr-box h3 { font-family: var(--font-display); margin: 0 0 .35rem; font-size: 1.25rem; }
-.qr-box p { margin: 0 0 1rem; font-size: .8rem; color: #5d6b65; }
-.qr-img-wrap {
-  background: #fff; padding: .75rem; border: 1px solid #cfd6cc; border-radius: .75rem;
-  display: inline-block; margin-bottom: .85rem;
-}
-.qr-img-wrap img { display: block; width: 200px; height: 200px; }
-.qr-url-input {
-  width: 100%; font-size: .75rem; padding: .45rem .6rem; border: 1px solid #cfd6cc;
-  border-radius: .4rem; margin-bottom: .75rem; text-align: center; color: #16231f; background: #f7f8f4;
-}
-.qr-actions { display: flex; gap: .5rem; justify-content: center; }
-.qr-actions button, .qr-actions a {
-  flex: 1; padding: .55rem; font-size: .8125rem; font-weight: 600; border-radius: .45rem;
-  border: 1px solid #cfd6cc; background: #f7f8f4; color: #16231f; cursor: pointer; text-decoration: none;
-}
-.qr-actions .primary { background: #9a5a22; color: #fff; border-color: #9a5a22; }
 
 @media (max-width: 767px) {
   .top {
@@ -287,6 +253,11 @@ body::before {
   background: rgba(17, 32, 26, .20) !important;
 }
 
+/* 카테고리 아래 구분선을 카테고리 테두리 색상과 통일 */
+.rail {
+  border-bottom-color: var(--line) !important;
+}
+
 </style>
 </head>
 <body>
@@ -298,7 +269,6 @@ body::before {
     </div>
     <div class="top-btns">
       <button type="button" class="lang-switch" id="lang-btn">🇺🇸 EN</button>
-      <button type="button" class="qr-btn" id="open-qr" aria-label="QR코드 보기">🏁 QR</button>
     </div>
     <p id="intro"></p>
   </header>
@@ -323,26 +293,11 @@ body::before {
   </footer>
 </div>
 
-<!-- QR코드 팝업 모달 -->
-<div class="qr-modal" id="qr-modal" hidden>
-  <div class="qr-box">
-    <h3 id="qr-title">모바일 메뉴판</h3>
-    <p id="qr-desc">스마트폰 카메라로 스캔하면 메뉴판이 열립니다.</p>
-    <div class="qr-img-wrap">
-      <img id="qr-img" alt="메뉴판 QR코드" src="">
-    </div>
-    <input type="text" id="qr-url" class="qr-url-input" placeholder="배포된 인터넷 주소(URL) 입력">
-    <div class="qr-actions">
-      <a id="qr-download" class="primary" href="" download="menu-qr.png" target="_blank">QR 이미지 보기</a>
-      <button type="button" id="close-qr">닫기</button>
-    </div>
-  </div>
-</div>
 
 <!-- ============ 메뉴 데이터 (한국어 / 영어 듀얼 지원) ============ -->
 <script type="text/plain" id="menu-data">
-@가게이름_ko = @bar.snagsun
-@가게이름_en = @bar.snagsun
+@가게이름_ko = @bar.sangsun
+@가게이름_en = @bar.sangsun
 @안내문_ko = 궁금한 메뉴 있으시면 두 사장을 찾아주세요!!
 @안내문_en = Feel free to ask the owners if you have any questions!
 @하단문구_ko = 재고에 따라 일부 메뉴는 제공되지 않을 수 있습니다.
@@ -581,12 +536,11 @@ S.B.S 도미니칸 아로마 그란데 | S.B.S Dominican Aroma Grande | 57% | 10
     var secs = [], itemEls = [];
 
     // 설정 반영
-    var shopText = settings[currentLang]['가게이름'] || '@bar.snagsun';
+    var shopText = settings[currentLang]['가게이름'] || '@bar.sangsun';
     var shopEl = document.getElementById('shop');
-    document.getElementById('qr-title').textContent = shopText;
     document.title = shopText;
     if (shopText.charAt(0) === '@') {
-      shopEl.innerHTML = '<a class="shop-instagram-link" href="https://www.instagram.com/bar.snagsun/" target="_blank" rel="noopener noreferrer" aria-label="Instagram 열기" title="Instagram"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.7" r="1.1" fill="currentColor"/></svg></a>' + shopText.slice(1);
+      shopEl.innerHTML = '<a class="shop-instagram-link" href="https://www.instagram.com/bar.sangsun/" target="_blank" rel="noopener noreferrer" aria-label="Instagram 열기" title="Instagram"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.7" r="1.1" fill="currentColor"/></svg></a>' + shopText.slice(1);
     } else {
       shopEl.textContent = shopText;
     }
@@ -640,6 +594,7 @@ S.B.S 도미니칸 아로마 그란데 | S.B.S Dominican Aroma Grande | 57% | 10
         sec.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
       });
       chips.appendChild(a);
+      secs[secs.length - 1].chip = a;
     });
 
     var q = document.getElementById('q'), empty = document.getElementById('empty');
@@ -648,7 +603,7 @@ S.B.S 도미니칸 아로마 그란데 | S.B.S Dominican Aroma Grande | 57% | 10
       itemEls.forEach(function (li) { li.hidden = !!v && li.getAttribute('data-name').indexOf(v) === -1; });
       secs.forEach(function (s) {
         var n = s.el.querySelectorAll('.item:not([hidden])').length;
-        s.el.hidden = n === 0; s.cnt.textContent = n; shown += n;
+        s.el.hidden = n === 0; s.chip.hidden = !!v && n === 0; s.cnt.textContent = n; shown += n;
       });
       empty.hidden = shown !== 0;
       menu.scrollLeft = 0;
@@ -687,37 +642,6 @@ S.B.S 도미니칸 아로마 그란데 | S.B.S Dominican Aroma Grande | 57% | 10
       menu.scrollBy({ left: e.deltaY * 1.5, behavior: 'auto' });
     }
   }, { passive: false });
-
-  // QR코드 생성 기능
-  var qrModal = document.getElementById('qr-modal');
-  var qrImg = document.getElementById('qr-img');
-  var qrUrlInput = document.getElementById('qr-url');
-  var qrDownload = document.getElementById('qr-download');
-
-  function updateQR(url) {
-    var target = url.trim() || window.location.href;
-    var api = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=' + encodeURIComponent(target);
-    qrImg.src = api;
-    qrDownload.href = api;
-  }
-
-  document.getElementById('open-qr').addEventListener('click', function () {
-    var currentUrl = window.location.href.indexOf('http') === 0 ? window.location.href.split('#')[0] : 'https://여기에-배포한-주소를-넣으세요.github.io';
-    qrUrlInput.value = currentUrl;
-    updateQR(currentUrl);
-    qrModal.hidden = false;
-  });
-
-  qrUrlInput.addEventListener('input', function () {
-    updateQR(qrUrlInput.value);
-  });
-
-  document.getElementById('close-qr').addEventListener('click', function () {
-    qrModal.hidden = true;
-  });
-  qrModal.addEventListener('click', function (e) {
-    if (e.target === qrModal) qrModal.hidden = true;
-  });
 })();
 </script>
 </body>
