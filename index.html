@@ -248,29 +248,23 @@ body::before {
 .grp {
   background: rgba(17, 32, 26, .20) !important;
 }
-.brand-link {
-  color: inherit;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-}
-.brand-link:hover {
-  opacity: 0.8;
-}
+
 </style>
 </head>
 <body>
 
 <div class="top-area">
-  <div class="top">
+  <header class="top">
     <div class="title-grp">
-      <span class="kicker">BAR MENU</span>
-      <h1>
-        <a href="https://www.instagram.com/bar.sangsun/" target="_blank" rel="noopener noreferrer" class="brand-link">
-          bar.sangsun
-        </a>
-      </h1>
+      <div class="kicker" id="kicker">네이버후드바 상선</div>
+      <h1 id="shop"></h1>
     </div>
-  </div>
+    <div class="top-btns">
+      <button type="button" class="lang-switch" id="lang-btn">🌐 EN</button>
+      <button type="button" class="qr-btn" id="open-qr" aria-label="QR코드 보기">🏁 QR</button>
+    </div>
+    <p id="intro"></p>
+  </header>
 </div>
 
 <nav class="rail" aria-label="카테고리">
