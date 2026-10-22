@@ -22,7 +22,6 @@
 }
 
 @media (prefers-color-scheme: light) {
-  /* 라이트 모드에서도 진녹색 컨셉을 유지하려면 아래처럼 고정하거나 라이트/다크를 반대로 설정할 수 있습니다 */
   :root { 
     --bg: #111c18; 
     --surface: #1b2d27; 
@@ -49,6 +48,15 @@ body { display: flex; flex-direction: column; }
 .kicker { font-size: .7rem; letter-spacing: .18em; color: var(--accent); font-weight: 700; }
 .top h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.55rem; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
 .top p { margin: 0; color: var(--muted); font-size: .8125rem; width: 100%; margin-top: .15rem; }
+
+.top-btns { display: flex; gap: .5rem; align-items: center; }
+.lang-switch {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: .45rem; padding: .35rem .65rem; font-size: .75rem; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
+}
+.lang-switch:hover { border-color: var(--accent); color: var(--accent); }
+
 .qr-btn {
   background: var(--surface); color: var(--fg); border: 1px solid var(--line);
   border-radius: .45rem; padding: .35rem .65rem; font-size: .75rem; font-weight: 600;
@@ -110,24 +118,21 @@ body { display: flex; flex-direction: column; }
 
 .item { display: flex; align-items: baseline; gap: .45rem; padding-block: .62rem; border-bottom: 1px solid var(--line); }
 .item:last-child { border-bottom: none; }
-.nm { min-width: 0; overflow-wrap: anywhere; font-weight: 500; line-height: 1.35; }
+.nm { min-width: 0; overflow-wrap: anywhere; font-weight: 500; line-height: 1.35; flex: 0 1 auto; }
 .tag {
   display: inline-block;
   margin-left: .4rem;
   font-size: .6875rem;
   font-weight: 500;
-  
-  /* --- 갈녹색 톤 적용 --- */
-  color: #8a9a86;                   /* 차분한 올리브/갈녹색 텍스트 */
-  background-color: rgba(138, 154, 134, 0.12); /* 은은한 갈녹색 배경 박스 */
-  border: 1px solid #6b7a67;        /* 차분한 갈녹색 테두리 */
-  
+  color: #8a9a86;
+  background-color: rgba(138, 154, 134, 0.12);
+  border: 1px solid #6b7a67;
   border-radius: .25rem;
   padding: 0 .35rem;
   vertical-align: .05em;
   white-space: nowrap;
 }
-  .dots { flex: 1 1 .75rem; min-width: .5rem; border-bottom: 1px dotted var(--muted); opacity: .45; transform: translateY(-.2em); }
+.dots { flex: 1 1 auto; min-width: 1rem; border-bottom: 1px dotted var(--muted); opacity: .45; transform: translateY(-.2em); }
 
 /* 도수(ABV) 및 가격 표기 */
 .abv {
@@ -135,7 +140,7 @@ body { display: flex; flex-direction: column; }
   color: var(--muted); background: var(--bg); border: 1px solid var(--line);
   padding: .05rem .38rem; border-radius: .25rem; white-space: nowrap;
 }
-.pr { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; min-width: 3.1rem; text-align: right; }
+.pr { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; min-width: 3.5rem; text-align: right; margin-left: auto; }
 .pr.text { font-weight: 500; color: var(--muted); }
 
 .empty {
@@ -184,10 +189,13 @@ body { display: flex; flex-direction: column; }
 <div class="top-area">
   <header class="top">
     <div class="title-grp">
-      <div class="kicker">네이버후드바 상선</div>
+      <div class="kicker" id="kicker">네이버후드바 상선</div>
       <h1 id="shop"></h1>
     </div>
-    <button type="button" class="qr-btn" id="open-qr" aria-label="QR코드 보기">🏁 QR코드</button>
+    <div class="top-btns">
+      <button type="button" class="lang-switch" id="lang-btn">🌐 EN</button>
+      <button type="button" class="qr-btn" id="open-qr" aria-label="QR코드 보기">🏁 QR</button>
+    </div>
     <p id="intro"></p>
   </header>
 </div>
@@ -207,7 +215,7 @@ body { display: flex; flex-direction: column; }
 <div class="foot-wrap">
   <footer class="foot">
     <span id="foot"></span>
-    <span class="swipe-hint">← 좌우로 밀어서 카테고리 이동 →</span>
+    <span class="swipe-hint" id="swipe-hint">← 좌우로 밀어서 카테고리 이동 →</span>
   </footer>
 </div>
 
@@ -215,7 +223,7 @@ body { display: flex; flex-direction: column; }
 <div class="qr-modal" id="qr-modal" hidden>
   <div class="qr-box">
     <h3 id="qr-title">모바일 메뉴판</h3>
-    <p>스마트폰 카메라로 스캔하면 메뉴판이 열립니다.</p>
+    <p id="qr-desc">스마트폰 카메라로 스캔하면 메뉴판이 열립니다.</p>
     <div class="qr-img-wrap">
       <img id="qr-img" alt="메뉴판 QR코드" src="">
     </div>
@@ -227,187 +235,203 @@ body { display: flex; flex-direction: column; }
   </div>
 </div>
 
-<!-- ============ 메뉴 데이터 (브랜드 순으로 정렬됨) ============ -->
+<!-- ============ 메뉴 데이터 (한국어 / 영어 듀얼 지원) ============ -->
 <script type="text/plain" id="menu-data">
-@가게이름 = @bar.sangsun
-@안내문 = 궁금한 메뉴 있으시면 두 사장을 찾아주세요!!
-@하단문구 = 재고에 따라 일부 메뉴는 제공되지 않을 수 있습니다.
+@가게이름_ko = @bar.sangsun
+@가게이름_en = @bar.sangsun
+@안내문_ko = 궁금한 메뉴 있으시면 두 사장을 찾아주세요!!
+@안내문_en = Feel free to ask the owners if you have any questions!
+@하단문구_ko = 재고에 따라 일부 메뉴는 제공되지 않을 수 있습니다.
+@하단문구_en = Some items may be subject to availability.
 
-[스카치 하이랜드 | 30ml]
-글렌모렌지 12년 오리지날 | 40% | 12000
-글렌모렌지 15년 라산타 | 43% | 15000
-글렌모렌지 퀸타루반 | 46% | 15000
-글렌모렌지 넥타도르 | 46% | 17000
-글렌모렌지 시그넷 | 46% | 30000
-달모어 15년 | 40% | 25000
-달위니 15년 | 43% | 15000
-오반 14년 | 43% | 17000
-올드풀트니 12년 | 40% | 12000
-클라이넬리쉬 14년 | 46% | 12000
-하이랜드 파크 12년 | 40% | 12000
+[스카치 하이랜드 | Scotch Highland | 30ml]
+글렌모렌지 12년 오리지날 | Glenmorangie The Original 12y | 40% | 12000
+글렌모렌지 15년 라산타 | Glenmorangie Lasanta 15y | 43% | 15000
+글렌모렌지 퀸타루반 | Glenmorangie Quinta Ruban | 46% | 15000
+글렌모렌지 넥타도르 | Glenmorangie Nectar D'Or | 46% | 17000
+글렌모렌지 시그넷 | Glenmorangie Signet | 46% | 30000
+달모어 15년 | Dalmore 15y | 40% | 25000
+달위니 15년 | Dalwhinnie 15y | 43% | 15000
+오반 14년 | Oban 14y | 43% | 17000
+올드풀트니 12년 | Old Pulteney 12y | 40% | 12000
+클라이넬리쉬 14년 | Clynelish 14y | 46% | 12000
+하이랜드 파크 12년 | Highland Park 12y | 40% | 12000
 
-[스카치 스페이사이드 | 30ml]
-글렌고인 12년 | 43% | 12000
-글렌고인 15년 | 43% | 20000
-글렌그란트 아보랄리스 | 40% | 9000
-글렌그란트 10년 | 40% | 10000
-글렌그란트 12년 | 43% | 12000
-글렌그란트 15년 | 50% | 17000
-글렌그란트 18년 | 43% | 25000
-글렌알라키 12년 | 46% | 15000
-글렌알라키 15년 | 46% | 24000
-글렌파클라스 105 | 60% | 15000
-글렌파클라스 15년 | 46% | 17000
-글렌피딕 12년 | 40% | 12000
-글렌피딕 15년 | 40% | 15000
-글렌피딕18년 | 40% | 25000
-발베니 12년 | 40% | 13000
-발베니 14년 | 43% | 21000
-발베니 14년 위크 오브 피트 | 48.3% | 22000
-발렌타인 글렌버기 15년 | 40% | 15000
-아벨라워 12년 | 40% | 13000
-맥캘란 12년 쉐리오크 | 40% | 13000
-맥캘란 15년 더블캐스크 | 43% | 25000
-더 글렌드로낙 12년 | 43% | 12000
-더 글렌드로낙 15년 | 46% | 20000
-더 글렌리벳 12년 | 40% | 12000
-더 글렌리벳 15년 | 40% | 15000
+[스카치 스페이사이드 | Scotch Speyside | 30ml]
+글렌고인 12년 | Glengoyne 12y | 43% | 12000
+글렌고인 15년 | Glengoyne 15y | 43% | 20000
+글렌그란트 아보랄리스 | Glen Grant Arboralis | 40% | 9000
+글렌그란트 10년 | Glen Grant 10y | 40% | 10000
+글렌그란트 12년 | Glen Grant 12y | 43% | 12000
+글렌그란트 15년 | Glen Grant 15y | 50% | 17000
+글렌그란트 18년 | Glen Grant 18y | 43% | 25000
+글렌알라키 12년 | GlenAllachie 12y | 46% | 15000
+글렌알라키 15년 | GlenAllachie 15y | 46% | 24000
+글렌파클라스 105 | Glenfarclas 105 Cask Strength | 60% | 15000
+글렌파클라스 15년 | Glenfarclas 15y | 46% | 17000
+글렌피딕 12년 | Glenfiddich 12y | 40% | 12000
+글렌피딕 15년 | Glenfiddich 15y | 40% | 15000
+글렌피딕18년 | Glenfiddich 18y | 40% | 25000
+발베니 12년 | The Balvenie DoubleWood 12y | 40% | 13000
+발베니 14년 | The Balvenie Caribbean Cask 14y | 43% | 21000
+발베니 14년 위크 오브 피트 | The Balvenie Week of Peat 14y | 48.3% | 22000
+발렌타인 글렌버기 15년 | Ballantine's Glenburgie 15y | 40% | 15000
+아벨라워 12년 | Aberlour Double Cask 12y | 40% | 13000
+맥캘란 12년 쉐리오크 | The Macallan Sherry Oak 12y | 40% | 13000
+맥캘란 15년 더블캐스크 | The Macallan Double Cask 15y | 43% | 25000
+더 글렌드로낙 12년 | The Glendronach 12y | 43% | 12000
+더 글렌드로낙 15년 | The Glendronach 15y | 46% | 20000
+더 글렌리벳 12년 | The Glenlivet 12y | 40% | 12000
+더 글렌리벳 15년 | The Glenlivet 15y | 40% | 15000
 
-[스카치 아일레이 | 30ml]
-라가불린 16년 | 43% | 18000
-라프로익 10년 | 40% | 10000
-보모어 12년 | 40% | 12000
-보모어 15년 | 43% | 17000
-보모어 18년 | 43% | 25000
-브룩라디 스코티시 발리 위스키 | 50% | 15000
-아드백 위비스티 | 47.4% | 10000
-아드백 10년 | 46% | 13000
-아드백 언 오 | 46.6% | 15000
-아드백 우거다일 | 54.2% | 20000
-아드백 코리브레칸 | 57.1% | 21000
-킬호만 사닉 | 46% | 15000
+[스카치 아일레이 | Scotch Islay | 30ml]
+라가불린 16년 | Lagavulin 16y | 43% | 18000
+라프로익 10년 | Laphroaig 10y | 40% | 10000
+보모어 12년 | Bowmore 12y | 40% | 12000
+보모어 15년 | Bowmore 15y | 43% | 17000
+보모어 18년 | Bowmore 18y | 43% | 25000
+브룩라디 스코티시 발리 위스키 | Bruichladdich The Classic Laddie | 50% | 15000
+아드백 위비스티 | Ardbeg Wee Beastie 5y | 47.4% | 10000
+아드백 10년 | Ardbeg 10y | 46% | 13000
+아드백 언 오 | Ardbeg An Oa | 46.6% | 15000
+아드백 우거다일 | Ardbeg Uigeadail | 54.2% | 20000
+아드백 코리브레칸 | Ardbeg Corryvreckan | 57.1% | 21000
+킬호만 사닉 | Kilchoman Sanaig | 46% | 15000
 
-[스카치 아일랜드 · 기타 | 30ml]
-탈리스커 10년 | 45.8% | 10000
-토라빅 올트글린 | 46% | 15000
-아란 소테른캐스크 | 50% | 17000
-아란 아마로네캐스크 | 50% | 17000
+[스카치 아일랜드 · 기타 | Scotch Islands & Others | 30ml]
+탈리스커 10년 | Talisker 10y | 45.8% | 10000
+토라빅 올트글린 | Torabhaig Allt Gleann | 46% | 15000
+아란 소테른캐스크 | Arran Sauternes Cask | 50% | 17000
+아란 아마로네캐스크 | Arran Amarone Cask | 50% | 17000
 
-[스카치 블렌디드 | 30ml]
-조니워커 블랙 | 40% | 10000
-조니워커 더블블랙 | 40% | 11000
-조니워커 그린 | 43% | 15000
-커티샥 프로히비션 | 50% | 10000
-듀어스 12년 | 40% | 12000
+[스카치 블렌디드 | Scotch Blended | 30ml]
+조니워커 블랙 | Johnnie Walker Black Label | 40% | 10000
+조니워커 더블블랙 | Johnnie Walker Double Black | 40% | 11000
+조니워커 그린 | Johnnie Walker Green Label 15y | 43% | 15000
+커티샥 프로히비션 | Cutty Sark Prohibition Edition | 50% | 10000
+듀어스 12년 | Dewar's 12y | 40% | 12000
 
-[버번 · 라이 | 30ml]
-납크릭 버번 | 50% | 10000
-납크릭 라이 | 50% | 10000
-레벨옐 100 프루프 | 50% | 9000
-러셀리저브 싱글배럴 | 55% | 15000
-메이커스마크 | 45% | 9000
-메이커스 마크 46 | 47% | 12000
-메이커스 마크 cs | 55% | 12000
-믹터스 아메리칸 | 41.7% | 14000
-믹터스 사워매쉬 | 43% | 14000
-버팔로 트레이스 | 45% | 9000
-우드포드 리저브 | 45.2% | 12000
-와일드터키 8년 | 50.5% | 9000
-와일드터키 라이 | 40.5% | 9000
-이글레어 10년 | 45% | 15000
-엔젤스 엔비 포트피니시 | 43.3% | 12000
-올드 포레스터 | 43% | 9000
-잭다니엘 | 40% | 9000
-포로지스 싱글배럴 | 50% | 12000
-블랑톤 싱글배럴 | 46.5% | 20000
-E.H 테일러 스몰배치 | 50% | 25000
+[버번 · 라이 | Bourbon & Rye | 30ml]
+납크릭 버번 | Knob Creek Bourbon | 50% | 10000
+납크릭 라이 | Knob Creek Rye | 50% | 10000
+레벨옐 100 프루프 | Rebel Yell 100 Proof | 50% | 9000
+러셀리저브 싱글배럴 | Russell's Reserve Single Barrel | 55% | 15000
+메이커스마크 | Maker's Mark | 45% | 9000
+메이커스 마크 46 | Maker's Mark 46 | 47% | 12000
+메이커스 마크 cs | Maker's Mark Cask Strength | 55% | 12000
+믹터스 아메리칸 | Michter's US*1 American Whiskey | 41.7% | 14000
+믹터스 사워매쉬 | Michter's US*1 Sour Mash | 43% | 14000
+버팔로 트레이스 | Buffalo Trace | 45% | 9000
+우드포드 리저브 | Woodford Reserve | 45.2% | 12000
+와일드터키 8년 | Wild Turkey 8y | 50.5% | 9000
+와일드터키 라이 | Wild Turkey Rye | 40.5% | 9000
+이글레어 10년 | Eagle Rare 10y | 45% | 15000
+엔젤스 엔비 포트피니시 | Angel's Envy Port Finish | 43.3% | 12000
+올드 포레스터 | Old Forester | 43% | 9000
+잭다니엘 | Jack Daniel's Old No. 7 | 40% | 9000
+포로지스 싱글배럴 | Four Roses Single Barrel | 50% | 12000
+블랑톤 싱글배럴 | Blanton's Single Barrel | 46.5% | 20000
+E.H 테일러 스몰배치 | E.H. Taylor, Jr. Small Batch | 50% | 25000
 
-[아이리쉬 | 30ml]
-버스커 트리플 캐스크 | 40% | 9000 | 블렌디드
-버스커 싱글 그레인 | 44.3% | 12000 | 싱글그레인
-버스커 싱글 팟 스틸 | 44.3% | 12000 | 싱글팟스틸
-부쉬밀 12년 | 40% | 12000 | 싱글몰트
-리마바디 싱글몰트 아이리쉬 | 46% | 12000 | 싱글몰트
-제임슨 스텐다드 | 40% | 9000 | 블렌디드
-레드브레스트 15년 | 46% | 25000 | 싱글팟스틸
+[아이리쉬 | Irish | 30ml]
+버스커 트리플 캐스크 | Busker Triple Cask | 40% | 9000 | 블렌디드 | Blended
+버스커 싱글 그레인 | Busker Single Grain | 44.3% | 12000 | 싱글그레인 | Single Grain
+버스커 싱글 팟 스틸 | Busker Single Pot Still | 44.3% | 12000 | 싱글팟스틸 | Single Pot Still
+부쉬밀 12년 | Bushmills 12y | 40% | 12000 | 싱글몰트 | Single Malt
+리마바디 싱글몰트 아이리쉬 | Limavady Single Malt Irish | 46% | 12000 | 싱글몰트 | Single Malt
+제임슨 스텐다드 | Jameson Standard | 40% | 9000 | 블렌디드 | Blended
+레드브레스트 15년 | Redbreast 15y | 46% | 25000 | 싱글팟스틸 | Single Pot Still
 
-[뉴월드 | 30ml]
-기원 독수리 | 43% | 13000 | 한국
-기원 호랑이 | 46% | 13000 | 한국
-니카 프롬 더 배럴 | 51.4% | 12000 | 일본
-람푸르 아사바 | 45% | 15000 | 인도
-미야기쿄 싱글몰트 | 45% | 15000 | 일본
-요이치 싱글몰트 | 45% | 15000 | 일본
-아마하간 월드몰트 에디션 No.3 미즈나라 캐스크 | 47% | 18000 | 일본
-아마하간 월드몰트 야마자쿠라 캐스크 | 47% | 18000 | 일본
-라크 클래식 캐스크 | 43% | 25000 | 호주
-라크 치노토 캐스크 | 44% | 25000 | 호주
-바쉐 가브리엘센 위스키 프랑셰 싱글몰트 5년 | 41% | 11000 | 프랑스
+[뉴월드 | New World | 30ml]
+기원 독수리 | Ki One Eagle | 43% | 13000 | 한국 | Korea
+기원 호랑이 | Ki One Tiger | 46% | 13000 | 한국 | Korea
+니카 프롬 더 배럴 | Nikka From The Barrel | 51.4% | 12000 | 일본 | Japan
+람푸르 아사바 | Rampur Asava | 45% | 15000 | 인도 | India
+미야기쿄 싱글몰트 | Miyagikyo Single Malt | 45% | 15000 | 일본 | Japan
+요이치 싱글몰트 | Yoichi Single Malt | 45% | 15000 | 일본 | Japan
+아마하간 월드몰트 에디션 No.3 미즈나라 캐스크 | Nagahama Amahagan No.3 Mizunara | 47% | 18000 | 일본 | Japan
+아마하간 월드몰트 야마자쿠라 캐스크 | Nagahama Amahagan Yamazakiura | 47% | 18000 | 일본 | Japan
+라크 클래식 캐스크 | Lark Classic Cask | 43% | 25000 | 호주 | Australia
+라크 치노토 캐스크 | Lark Chinotto Cask | 44% | 25000 | 호주 | Australia
+바쉐 가브리엘센 위스키 프랑셰 싱글몰트 5년 | Vache Gabrielsen French Single Malt 5y | 41% | 11000 | 프랑스 | France
 
-[캐나디안 위스키 | 30ml]
-캐나디안 클럽 12년 | 40% | 10000 | 캐나다
+[캐나디안 위스키 | Canadian Whisky | 30ml]
+캐나디안 클럽 12년 | Canadian Club 12y | 40% | 10000 | 캐나다 | Canada
 
-[진 | 30ml]
-몽키 47 | 47% | 10000 | 독일
-키노비 오리지널 | 45.7% | 8000 | 일본
-수이진 | 40% | 8000 | 일본
-쉽 스미스 런던드라이 진 | 41.6% | 8000 | 영국
-봄베이 드라이 진 | 47% | 8000 | 영국
-헤이먼스 드라이 | 41.2% | 8000 | 영국
-헤이먼스 올드톰 진 | 41.4% | 8000 | 영국
-헤이먼스 슬로우 진 | 47% | 8000 | 영국
-진 마레 | 42.7% | 8000 | 스페인
+[진 | Gin | 30ml]
+몽키 47 | Monkey 47 Schwarzwald Dry | 47% | 10000 | 독일 | Germany
+키노비 오리지널 | Ki No Bi Kyoto Dry | 45.7% | 8000 | 일본 | Japan
+수이진 | Suntory Roku Suisen Gin | 40% | 8000 | 일본 | Japan
+쉽 스미스 런던드라이 진 | Ship's Smith London Dry Gin | 41.6% | 8000 | 영국 | UK
+봄베이 드라이 진 | Bombay Dry Gin | 47% | 8000 | 영국 | UK
+헤이먼스 드라이 | Hayman's London Dry Gin | 41.2% | 8000 | 영국 | UK
+헤이먼스 올드톰 진 | Hayman's Old Tom Gin | 41.4% | 8000 | 영국 | UK
+헤이먼스 슬로우 진 | Hayman's Sloe Gin | 47% | 8000 | 영국 | UK
+진 마레 | Gin Mare | 42.7% | 8000 | 스페인 | Spain
 
-[브랜디 · 깔바도스 | 30ml]  
-레미마틴 VSOP | 40% | 15000 | 브랜디 · 꼬냑
-헤네시 VSOP | 40% | 15000 | 브랜디 · 꼬냑
-까뮤 VSOP | 40% | 15000 | 브랜디 · 꼬냑
-헨리무니에 VSOP | 40% | 12000 | 브랜디 · 꼬냑
-프랑소와 페이로 XO | 40% | 22000 | 브랜디 · 꼬냑
-장퓨 트레뷰 | 40% | 28000 | 브랜디 · 꼬냑
-바쉐 가브리엘센 빈티지 2011 쁘띠상파뉴 | 41.3% | 22000 | 브랜디 · 꼬냑
-디디에 르믈통 10ans | 40% | 17000 | 깔바도스
-꼼데데 로히스틍 뽐므 프리즈니에| 40% | 25000 | 깔바도스
+[브랜디 · 깔바도스 | Brandy & Calvados | 30ml]
+레미마틴 VSOP | Rémy Martin VSOP | 40% | 15000 | 브랜디 · 꼬냑 | Brandy & Cognac
+헤네시 VSOP | Hennessy VSOP | 40% | 15000 | 브랜디 · 꼬냑 | Brandy & Cognac
+까뮤 VSOP | Camus VSOP | 40% | 15000 | 브랜디 · 꼬냑 | Brandy & Cognac
+헨리무니에 VSOP | Henri Mounier VSOP | 40% | 12000 | 브랜디 · 꼬냑 | Brandy & Cognac
+프랑소와 페이로 XO | François Peyrot XO | 40% | 22000 | 브랜디 · 꼬냑 | Brandy & Cognac
+장퓨 트레뷰 | Jean Fillioux Très Vieille | 40% | 28000 | 브랜디 · 꼬냑 | Brandy & Cognac
+바쉐 가브리엘센 빈티지 2011 쁘띠상파뉴 | Bache-Gabrielsen Vintage 2011 | 41.3% | 22000 | 브랜디 · 꼬냑 | Brandy & Cognac
+디디е 르믈통 10ans | Didier Lemorton 10ans Calvados | 40% | 17000 | 깔바도스 | Calvados
+꼼데데 로히스틍 뽐므 프리즈니에 | Comte Louis de Lauriston Pomme Prisonnière | 40% | 25000 | 깔바도스 | Calvados
 
-[럼 | 30ml]  
-바카디 8 | 40% | 10000 | 푸에르토리코
-자카파 23| 40% | 15000 | 과테말라
-디플로마티코 만티아노| 40% | 12000 | 베네수엘라
-디플로마티코 메제르바 익스클루시브 | 40% | 15000 | 베네수엘라
-파트리돔 셀렉시옹 익스클루시브 | 40% | 12000 | 도미니카 공화국
-S.B.S 도미니칸 아로마 그란데 | 57% | 10000 | 도미니카 공화국
-두얼리스 XO | 43% | 15000 | 바베이도스
+[럼 | Rum | 30ml]
+바카디 8 | Bacardi Ocho 8y | 40% | 10000 | 푸에르토리코 | Puerto Rico
+자카파 23 | Ron Zacapa Centenario 23 | 40% | 15000 | 과테말라 | Guatemala
+디플로마티코 만티아노 | Diplomático Mantuano | 40% | 12000 | 베네수엘라 | Venezuela
+디플로마티코 메제르바 익스클루시브 | Diplomático Reserva Exclusiva | 40% | 15000 | 베네수엘라 | Venezuela
+파트리돔 셀렉시옹 익스클루시브 | Patridom Selección Exclusiva | 40% | 12000 | 도미니카 공화국 | Dominican Rep.
+S.B.S 도미니칸 아로마 그란데 | S.B.S Dominican Aroma Grande | 57% | 10000 | 도미니카 공화국 | Dominican Rep.
+두얼리스 XO | Duppy Share XO | 43% | 15000 | 바베이도스 | Barbados
 
-[데킬라 | 30ml] 
-호세쿠엘보 레포사도 | 35% | 7000 | 멕시코
-호세쿠엘보 레포사도 1800 | 40% | 10000 | 멕시코
-페트론 실버 | 40% | 13000 | 멕시코
-페트론 레포사도 | 40% | 22000 | 멕시코
-페트론 아네호 | 40% | 25000 | 멕시코 
-도냐첼리아 블랑코 | 40% | 17000 | 멕시코
-도냐첼리아 레포사도 | 40% | 22000 | 멕시코
-도냐첼리아 아네호 | 40% | 25000 | 멕시코  
+[데킬라 | Tequila | 30ml]
+호세쿠엘보 레포사도 | José Cuervo Especial Reposado | 35% | 7000 | 멕시코 | Mexico
+호세쿠엘보 레포사도 1800 | 1800 Reposado Tequila | 40% | 10000 | 멕시코 | Mexico
+페트론 실버 | Patrón Silver | 40% | 13000 | 멕시코 | Mexico
+페트론 레포사도 | Patrón Reposado | 40% | 22000 | 멕시코 | Mexico
+페트론 아네호 | Patrón Añejo | 40% | 25000 | 멕시코 | Mexico
+도냐첼리아 블랑코 | Doña Celia Blanco | 40% | 17000 | 멕시코 | Mexico
+도냐첼리아 레포사도 | Doña Celia Reposado | 40% | 22000 | 멕시코 | Mexico
+도냐첼리아 아네호 | Doña Celia Añejo | 40% | 25000 | 멕시코 | Mexico
 
-[병맥주]
-사무엘 아담스 | 5% | 9000 | 미국
-런던 프라이드 | 4.7% | 9000 | 영국
+[병맥주 | Bottled Beer]
+사무엘 아담스 | Samuel Adams Boston Lager | 5% | 9000 | 미국 | USA
+런던 프라이드 | Fullers London Pride | 4.7% | 9000 | 영국 | UK
 </script>
 <!-- ============ 메뉴 데이터 끝 ============ -->
 
 <script>
 (function () {
   var raw = document.getElementById('menu-data').textContent;
-  var settings = {}, groups = [], cur = null;
+  var settings = { ko: {}, en: {} }, groups = [], cur = null;
 
   raw.split(/\r?\n/).forEach(function (line) {
     line = line.trim();
     if (!line || line.indexOf('//') === 0) return;
     var s = line.match(/^@([^=]+)=(.*)$/);
-    if (s) { settings[s[1].trim()] = s[2].trim(); return; }
+    if (s) {
+      var key = s[1].trim();
+      var val = s[2].trim();
+      if (key.endsWith('_ko')) {
+        settings.ko[key.replace('_ko', '')] = val;
+      } else if (key.endsWith('_en')) {
+        settings.en[key.replace('_en', '')] = val;
+      }
+      return;
+    }
     var g = line.match(/^\[(.+)\]$/);
     if (g) {
-      var p = g[1].split('|');
-      cur = { label: p[0].trim(), unit: (p[1] || '').trim(), items: [] };
+      var p = g[1].split('|').map(function(x){ return x.trim(); });
+      cur = { 
+        label: { ko: p[0], en: p[1] || p[0] }, 
+        unit: { ko: p[2] || '', en: p[2] || '' }, 
+        items: [] 
+      };
       groups.push(cur);
       return;
     }
@@ -415,17 +439,22 @@ S.B.S 도미니칸 아로마 그란데 | 57% | 10000 | 도미니카 공화국
     var f = line.split('|').map(function (x) { return x.trim(); });
     if (!f[0]) return;
 
-    if (f.length >= 2 && /%/.test(f[1])) {
-      var third = f[2] || '';
-      var fourth = f[3] || '';
-      // 세 번째 칸에 숫자가 없고(품절/문의 제외) 네 번째 칸이 비어있다면 태그로 자동 인식
+    if (f.length >= 3 && /%/.test(f[2])) {
+      var koName = f[0], enName = f[1], abv = f[2], third = f[3] || '', fourth = f[4] || '';
       if (third && !/^[\d,\s]+$/.test(third) && third !== '품절' && third !== '문의' && !fourth) {
-        cur.items.push({ name: f[0], abv: f[1], price: '', tag: third });
+        cur.items.push({ name: { ko: koName, en: enName }, abv: abv, price: '', tag: { ko: third, en: third } });
       } else {
-        cur.items.push({ name: f[0], abv: f[1], price: third, tag: fourth });
+        cur.items.push({ name: { ko: koName, en: enName }, abv: abv, price: third, tag: { ko: fourth, en: f[5] || fourth } });
+      }
+    } else if (f.length >= 2 && /%/.test(f[1])) {
+      var koName = f[0], enName = f[0], abv = f[1], third = f[2] || '', fourth = f[3] || '';
+      if (third && !/^[\d,\s]+$/.test(third) && third !== '품절' && third !== '문의' && !fourth) {
+        cur.items.push({ name: { ko: koName, en: enName }, abv: abv, price: '', tag: { ko: third, en: third } });
+      } else {
+        cur.items.push({ name: { ko: koName, en: enName }, abv: abv, price: third, tag: { ko: fourth, en: fourth } });
       }
     } else {
-      cur.items.push({ name: f[0], abv: '', price: f[1] || '', tag: f[2] || '' });
+      cur.items.push({ name: { ko: f[0], en: f[1] || f[0] }, abv: '', price: f[2] || '', tag: { ko: f[3] || '', en: f[4] || '' } });
     }
   });
 
@@ -439,87 +468,106 @@ S.B.S 도미니칸 아로마 그란데 | 57% | 10000 | 도미니카 공화국
     return (v && /^[\d,\s]+$/.test(v)) ? Number(v.replace(/[^\d]/g, '')).toLocaleString('ko-KR') : null;
   }
 
-  var shop = settings['가게이름'] || '메뉴판';
-  document.getElementById('shop').textContent = shop;
-  document.getElementById('qr-title').textContent = shop;
-  document.title = shop;
-  document.getElementById('intro').textContent = settings['안내문'] || '';
-  document.getElementById('foot').textContent = settings['하단문구'] || '';
+  var currentLang = 'ko';
 
-  var menu = document.getElementById('menu');
-  var chips = document.getElementById('chips');
-  var secs = [], itemEls = [];
+  function renderMenu() {
+    var menu = document.getElementById('menu');
+    var chips = document.getElementById('chips');
+    menu.innerHTML = '';
+    chips.innerHTML = '';
 
-  groups.forEach(function (g, i) {
-    var id = 'g' + i;
-    var sec = el('section', 'grp'); sec.id = id;
-    var h = el('header', 'grp-h');
-    h.appendChild(el('h2', '', g.label));
-    var u = el('span', 'unit', (g.unit ? g.unit + ' · ' : ''));
-    var cnt = el('span', 'cnt', String(g.items.length));
-    u.appendChild(cnt); u.appendChild(document.createTextNode('종'));
-    h.appendChild(u); sec.appendChild(h);
-    var ul = el('ul', 'list');
+    var secs = [], itemEls = [];
 
-    g.items.forEach(function (it) {
-      var li = el('li', 'item');
-      var searchKey = (it.name + ' ' + it.tag + ' ' + it.abv).toLowerCase().replace(/\s+/g, '');
-      li.setAttribute('data-name', searchKey);
+    // 설정 반영
+    var shopText = settings[currentLang]['가게이름'] || '@bar.sangsun';
+    document.getElementById('shop').textContent = shopText;
+    document.getElementById('qr-title').textContent = shopText;
+    document.title = shopText;
+    document.getElementById('intro').textContent = settings[currentLang]['안내문'] || '';
+    document.getElementById('foot').textContent = settings[currentLang]['하단문구'] || '';
+    document.getElementById('kicker').textContent = currentLang === 'ko' ? '네이버후드바 상선' : 'Neighborhood Bar Sangsun';
+    document.getElementById('q').placeholder = currentLang === 'ko' ? '술 이름 · 국가 · 도수 검색 (예: 글렌피딕, 일본, 50%)' : 'Search by name, country, ABV...';
+    document.getElementById('swipe-hint').textContent = currentLang === 'ko' ? '← 좌우로 밀어서 카테고리 이동 →' : '← Swipe left/right to move categories →';
+    document.getElementById('lang-btn').textContent = currentLang === 'ko' ? '🌐 EN' : '🌐 KO';
 
-      var nm = el('span', 'nm', it.name);
-      if (it.tag) nm.appendChild(el('span', 'tag', it.tag));
-      li.appendChild(nm);
+    groups.forEach(function (g, i) {
+      var id = 'g' + i;
+      var sec = el('section', 'grp'); sec.id = id;
+      var h = el('header', 'grp-h');
+      h.appendChild(el('h2', '', g.label[currentLang]));
+      var u = el('span', 'unit', (g.unit[currentLang] ? g.unit[currentLang] + ' · ' : ''));
+      var cnt = el('span', 'cnt', String(g.items.length));
+      u.appendChild(cnt); u.appendChild(document.createTextNode(currentLang === 'ko' ? '종' : ' items'));
+      h.appendChild(u); sec.appendChild(h);
+      var ul = el('ul', 'list');
 
-      var d = el('span', 'dots'); d.setAttribute('aria-hidden', 'true');
-      li.appendChild(d);
+      g.items.forEach(function (it) {
+        var li = el('li', 'item');
+        var searchKey = (it.name.ko + ' ' + it.name.en + ' ' + it.tag.ko + ' ' + it.tag.en + ' ' + it.abv).toLowerCase().replace(/\s+/g, '');
+        li.setAttribute('data-name', searchKey);
 
-      if (it.abv) {
-        li.appendChild(el('span', 'abv', it.abv));
-      }
+        var nm = el('span', 'nm', it.name[currentLang]);
+        if (it.tag[currentLang]) nm.appendChild(el('span', 'tag', it.tag[currentLang]));
+        li.appendChild(nm);
 
-      if (it.price) {
-        var n = fmt(it.price);
-        li.appendChild(el('span', n ? 'pr' : 'pr text', n || it.price));
-      }
-      ul.appendChild(li); itemEls.push(li);
-    });
+        var d = el('span', 'dots'); d.setAttribute('aria-hidden', 'true');
+        li.appendChild(d);
 
-    sec.appendChild(ul); menu.appendChild(sec);
-    secs.push({ el: sec, cnt: cnt });
+        if (it.abv) {
+          li.appendChild(el('span', 'abv', it.abv));
+        }
 
-    var a = el('a', 'chip' + (i === 0 ? ' on' : ''), g.label);
-    a.href = '#' + id; a.setAttribute('data-target', id);
-    a.addEventListener('click', function (ev) {
-      ev.preventDefault();
-      sec.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-    });
-    chips.appendChild(a);
-  });
-
-  var q = document.getElementById('q'), empty = document.getElementById('empty');
-  q.addEventListener('input', function () {
-    var v = q.value.toLowerCase().replace(/\s+/g, ''), shown = 0;
-    itemEls.forEach(function (li) { li.hidden = !!v && li.getAttribute('data-name').indexOf(v) === -1; });
-    secs.forEach(function (s) {
-      var n = s.el.querySelectorAll('.item:not([hidden])').length;
-      s.el.hidden = n === 0; s.cnt.textContent = n; shown += n;
-    });
-    empty.hidden = shown !== 0;
-    menu.scrollLeft = 0;
-  });
-
-  if ('IntersectionObserver' in window) {
-    var chipEls = Array.prototype.slice.call(chips.children);
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        chipEls.forEach(function (c) { c.classList.toggle('on', c.getAttribute('data-target') === e.target.id); });
-        var on = chips.querySelector('.chip.on');
-        if (on) chips.scrollLeft = on.offsetLeft - chips.clientWidth / 2 + on.clientWidth / 2;
+        if (it.price) {
+          var n = fmt(it.price);
+          li.appendChild(el('span', n ? 'pr' : 'pr text', n ? (currentLang === 'ko' ? n : '₩' + n) : it.price));
+        }
+        ul.appendChild(li); itemEls.push(li);
       });
-    }, { root: menu, threshold: 0.55 });
-    secs.forEach(function (s) { io.observe(s.el); });
+
+      sec.appendChild(ul); menu.appendChild(sec);
+      secs.push({ el: sec, cnt: cnt });
+
+      var a = el('a', 'chip' + (i === 0 ? ' on' : ''), g.label[currentLang]);
+      a.href = '#' + id; a.setAttribute('data-target', id);
+      a.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        sec.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+      });
+      chips.appendChild(a);
+    });
+
+    var q = document.getElementById('q'), empty = document.getElementById('empty');
+    q.oninput = function () {
+      var v = q.value.toLowerCase().replace(/\s+/g, ''), shown = 0;
+      itemEls.forEach(function (li) { li.hidden = !!v && li.getAttribute('data-name').indexOf(v) === -1; });
+      secs.forEach(function (s) {
+        var n = s.el.querySelectorAll('.item:not([hidden])').length;
+        s.el.hidden = n === 0; s.cnt.textContent = n; shown += n;
+      });
+      empty.hidden = shown !== 0;
+      menu.scrollLeft = 0;
+    };
+
+    if ('IntersectionObserver' in window) {
+      var chipEls = Array.prototype.slice.call(chips.children);
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          chipEls.forEach(function (c) { c.classList.toggle('on', c.getAttribute('data-target') === e.target.id); });
+          var on = chips.querySelector('.chip.on');
+          if (on) chips.scrollLeft = on.offsetLeft - chips.clientWidth / 2 + on.clientWidth / 2;
+        });
+      }, { root: menu, threshold: 0.55 });
+      secs.forEach(function (s) { io.observe(s.el); });
+    }
   }
+
+  renderMenu();
+
+  document.getElementById('lang-btn').addEventListener('click', function () {
+    currentLang = currentLang === 'ko' ? 'en' : 'ko';
+    renderMenu();
+  });
 
   menu.addEventListener('wheel', function (e) {
     var list = e.target.closest('.list');
